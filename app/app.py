@@ -5,7 +5,7 @@ import threading
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, cors_allowed_origins='*')
+socketio = SocketIO(app, cors_allowed_origins='*') # Origin must be changed in production
 
 # Dictionary to keep track of subprocesses
 subprocesses = {}
