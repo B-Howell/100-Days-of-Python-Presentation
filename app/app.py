@@ -21,8 +21,9 @@ def read_output(proc, sid):
             output = proc.stdout.readline()
             if output == '':
                 break
-            print(f"Debug: Sending to client {sid}: {output.strip()}")  # Debug print
-            socketio.emit('output', {'data': output}, room=sid)
+            # Replace newlines with carriage return + newline for xterm.js
+            formatted_output = output.replace('\n', '\r\n')
+            socketio.emit('output', {'data': formatted_output}, room=sid)
     finally:
         proc.stdout.close()
         proc.terminate()
