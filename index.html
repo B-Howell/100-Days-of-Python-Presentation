@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Terminal Emulator Test</title>
+    <!-- Include xterm.js CSS for terminal styling -->
+    <link href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" rel="stylesheet" />
+    <style>
+        #terminal-container {
+            width: 75%;
+            height: 400px;
+            margin: 30px auto;
+            border: 1px solid #000;
+        }
+        /* Initially hidden modal; will show when button is clicked */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Button to trigger terminal modal -->
+    <button id="openTerminalButton">Open Terminal</button>
+    
+    <!-- Hidden modal that will contain the terminal -->
+    <div id="terminalModal" class="hidden">
+        <div id="terminal-container"></div>
+    </div>
+
+    <!-- Load xterm.js library for terminal functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+    <!-- Load Socket.IO client to communicate with Flask backend -->
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        var term = new Terminal(); // Create a new terminal instance
+        var socket = io('http://localhost:5000'); // Connect to the Flask-SocketIO server
+
+        document.getElementById('openTerminalButton').addEventListener('click', function() {
+            document.getElementById('terminalModal').classList.remove('hidden');
+            term.open(document.getElementById('terminal-container'));
+            
+            // Correct this to only start the script once
+            socket.emit('execute_script', { script_name: '1_band_name_generator' });
+        });
+
+        // Listen for output from the server
+        socket.on('output', function(data) {
+            console.log("Received data:", data.data);  // Log data received from server
+            term.write(data.data);
+        });
+
+        // Send input to the server
+        term.onData(function(data) {
+            if (data.charCodeAt(0) === 127) { // Handle backspace
+                // Move the cursor back one space and clear the character
+                term.write('\b \b');
+            } else {
+                // Echo the input to the terminal, for user feedback
+                term.write(data);
+            }
+            
+            // Send the input data to the Flask server
+            socket.emit('input', { data: data });
+        });
+    </script>
+</body>
+</html>
