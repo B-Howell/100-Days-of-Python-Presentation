@@ -32,7 +32,9 @@
     <!-- Load Socket.IO client to communicate with Flask backend -->
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script>
-        var term = new Terminal(); // Create a new terminal instance
+        var term = new Terminal({
+            convertEol: true  // True to convert \n to \r\n on paste.
+        });
         var socket = io('http://localhost:5000'); // Connect to the Flask-SocketIO server
 
         document.getElementById('openTerminalButton').addEventListener('click', function() {
@@ -40,28 +42,32 @@
             term.open(document.getElementById('terminal-container'));
             
             // Correct this to only start the script once
-            socket.emit('execute_script', { script_name: '1_band_name_generator' });
+            socket.emit('execute_script', { script_name: '2_tip_calculator' });
         });
 
         // Listen for output from the server
+        // Listen for output from the server
         socket.on('output', function(data) {
             console.log("Received data:", data.data);  // Log data received from server
+            // Check if data ends with a newline
+            if (!data.data.endsWith('\n')) {
+                data.data += '\n'; // Add a newline if it does not end with one
+            }
             term.write(data.data);
         });
 
-        // Send input to the server
         term.onData(function(data) {
             if (data.charCodeAt(0) === 127) { // Handle backspace
-                // Move the cursor back one space and clear the character
                 term.write('\b \b');
+            } else if (data === '\r') { // If 'Enter' key is pressed
+                term.write('\r\n'); // Move to the beginning of the next line
+                socket.emit('input', { data: '\n' }); // Send newline to Python script
             } else {
-                // Echo the input to the terminal, for user feedback
-                term.write(data);
+                term.write(data); // Echo the input for other characters
+                socket.emit('input', { data: data }); // Send other input to Python script
             }
-            
-            // Send the input data to the Flask server
-            socket.emit('input', { data: data });
         });
+
     </script>
 </body>
 </html>

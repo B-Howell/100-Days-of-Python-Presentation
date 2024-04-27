@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Terminal - {{ script_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='terminal.css') }}">
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+<body>
+    <div id="terminal">
+        <pre><code class="termino-console"></code></pre>
+        <textarea class="termino-input" rows="1" wrap="hard"></textarea>
+    </div>
+
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', async () => {
+            const TerminoModule = await import('https://cdn.jsdelivr.net/gh/MarketingPipeline/Termino.js@v1.0.0/dist/termino.min.js');
+            const term = new TerminoModule.Termino(document.getElementById("terminal"));
+            const socket = io();
+
+            socket.on('connect', () => {
+                console.log('Connected to server, starting script...');
+                socket.emit('start_script', {script_name: '{{ script_name }}'});
+            });
+
+            socket.on('script_output', function(data) {
+                console.log('Received output:', data.data);
+                term.echo(data.data);
+            });
+
+            socket.on('script_ended', function(data) {
+                console.log('Script ended with code:', data.code);
+                term.echo(`\nScript exited with code ${data.code}`);
+            });
+        });
+    </script>
+</body>
+</html>
