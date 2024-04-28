@@ -12,27 +12,40 @@
         <textarea class="termino-input" rows="1" wrap="hard"></textarea>
     </div>
 
-    <script type="module">
+    <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const TerminoModule = await import('https://cdn.jsdelivr.net/gh/MarketingPipeline/Termino.js@v1.0.0/dist/termino.min.js');
             const term = new TerminoModule.Termino(document.getElementById("terminal"));
             const socket = io();
-
+    
+            const inputField = document.querySelector('.termino-input');
+    
             socket.on('connect', () => {
                 console.log('Connected to server, starting script...');
                 socket.emit('start_script', {script_name: '{{ script_name }}'});
             });
-
+    
             socket.on('script_output', function(data) {
                 console.log('Received output:', data.data);
-                term.echo(data.data);
+                term.echo(data.data.replace(/\n$/, ''));
             });
-
+    
             socket.on('script_ended', function(data) {
                 console.log('Script ended with code:', data.code);
                 term.echo(`\nScript exited with code ${data.code}`);
             });
+    
+            // Send user input to the server when the Enter key is pressed
+            inputField.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const input = inputField.value;
+                    term.echo(input); // Echo user input
+                    socket.emit('user_input', {data: input});
+                    inputField.value = ''; // Clear the input field
+                }
+            });
         });
     </script>
+    
 </body>
 </html>
