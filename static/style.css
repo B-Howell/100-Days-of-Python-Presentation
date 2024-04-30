@@ -1,0 +1,21 @@
+/* File: static/style.css */
+body {
+    font-family: Arial, sans-serif;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    margin: 10px 0;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+p {
+    color: #555;
+}
